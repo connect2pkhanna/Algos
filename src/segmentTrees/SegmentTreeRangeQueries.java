@@ -5,7 +5,7 @@ public class SegmentTreeRangeQueries {
 	public static void main(String[] args) {
 		SegmentTreeRangeQueries segmentTree = new SegmentTreeRangeQueries();
 		int[] arr = { 4, 1, 3, 7, 8, 4 };
-		int[] segmentedTree = segmentTree.createSegmentTreeAndReturnItsArrayRepresnentatio(arr);
+		int[] segmentedTree = segmentTree.createSegmentTreeAndReturnItsArrayRepresentation(arr);
 		System.out.println(segmentedTree);
 		int out = queryTheSegmentedTree(segmentedTree, 1, 3, 0, 5, 1);
 		System.out.println(out);
@@ -31,7 +31,7 @@ public class SegmentTreeRangeQueries {
 
 	}
 
-	private int[] createSegmentTreeAndReturnItsArrayRepresnentatio(int[] arr) {
+	private int[] createSegmentTreeAndReturnItsArrayRepresentation(int[] arr) {
 		int[] aux = new int[(2 * arr.length) + 2];
 		construct(aux, 0, arr.length - 1, 1, arr);
 
