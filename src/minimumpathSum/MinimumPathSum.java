@@ -14,15 +14,14 @@ public class MinimumPathSum {
 		System.out.println(minSum);
 	}
 
-	public static void dfs(int[][] arr, Position pos, int sum) {
-		
-		List<Position> positions = getNextValidPositions(pos.x, pos.y, arr);
+	private static void dfs(int[][] arr, Position pos, int sum) {
+		System.out.println(pos.toString() + " sum = " + sum);
+		List<Position> positions = getNextPositions(pos.x, pos.y, arr);
 
 		for (Position position : positions) {
 
 			if (position.x == arr.length - 1 && position.y == arr[0].length - 1) {
-				minSum = Math.min(minSum, sum);
-				// there is nowhere to go from here
+				minSum = Math.min(minSum, sum+arr[position.x][position.y]);
 				return;
 			}
 			dfs(arr, position, sum + arr[position.x][position.y]);
@@ -31,7 +30,7 @@ public class MinimumPathSum {
 
 	}
 
-	private static List<Position> getNextValidPositions(int i, int j, int[][] arr) {
+	private static List<Position> getNextPositions(int i, int j, int[][] arr) {
 		List<Position> positions = new ArrayList<Position>();
 		Position down = new Position(i + 1, j);
 		Position right = new Position(i, j + 1);
@@ -45,7 +44,7 @@ public class MinimumPathSum {
 		return positions;
 	}
 
-	private static boolean isValid(Position pos, int[][] arr) {
+	static boolean isValid(Position pos, int[][] arr) {
 		int i = pos.x;
 		int j = pos.y;
 
