@@ -25,7 +25,9 @@ public class SubSets {
 	// remove last added item now 
 
 	private static void recurse(int[] arr, int i, int len, List<Integer> list) {
+		System.out.println("i= "+i);
 		if(i>len) {
+			System.out.println("returning");
 			return ;
 		}
 		list.add(arr[i]);
