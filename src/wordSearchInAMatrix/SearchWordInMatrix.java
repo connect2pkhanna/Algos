@@ -9,7 +9,7 @@ public class SearchWordInMatrix {
 //
 	public static void main(String[] args) {
 		char[][] board = { { 'A', 'B', 'C', 'E' }, { 'S', 'F', 'C', 'S' }, { 'A', 'D', 'E', 'E' } };
-		String word = "ABCB";
+		String word = "ABC";
 		boolean isFound = search(board, 0, word, new Position(0, 0));
 		System.out.println(isFound);
 	}
