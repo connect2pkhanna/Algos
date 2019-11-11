@@ -4,7 +4,7 @@ public class BinarySearchToFindTheLastOccurence {
 	public static void main(String[] args) {
 		int[] arr= {1,2,3};
 	int index=	find(arr,1);
-	int index1=	findByStoringlastRightMostIndexAndoingRight(arr,1);
+	int index1=	findByStoringlastRightMostIndexAnGoingRight(arr,1);
 	System.out.println(index);
 	System.out.println(index1);
 	}
@@ -33,7 +33,7 @@ public class BinarySearchToFindTheLastOccurence {
 		// TODO Auto-generated method stub
 		
 	}
-	static int findByStoringlastRightMostIndexAndoingRight(int[] arr,int key){
+	static int findByStoringlastRightMostIndexAnGoingRight(int[] arr,int key){
 		
 		if(arr==null || arr.length<1) {
 			return -1;
