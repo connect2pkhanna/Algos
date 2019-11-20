@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 //https://leetcode.com/problems/longest-duplicate-substring/
+// The below solution's time complexity is O(n^2) and space complexity is max O(n) ,incase all the characters are unique
+//PLEASE NOTE : Iterative solution is better, i will move this solution to iterative to avoid the stackOverFlow due to recursion for large arrays
 public class LongestRepetitiveSubstring {
 // the question wants to output the consequetive longest substring which is repeated
 	/*
@@ -25,7 +27,7 @@ public class LongestRepetitiveSubstring {
 	public static void main(String[] args) {
 		//String str = "abcdabc";
 		//String str="aabcd";
-		String str="a";
+		String str="";
 		HashMap<Integer, HashSet<String>> map = new HashMap();
 		String longestRepetitive="";
 		for (int i = 0; i <=str.length() - 1; i++) {
