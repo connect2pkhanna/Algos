@@ -18,9 +18,11 @@ public class ReverseAList {
 		if (head == null || head.next == null) {
 			return head;
 		}
+		
 		Node prev = null;
 		Node current = head;
 		Node next = current.next;
+		
 		while (current != null) {
 			current.next = prev;
 			prev = current;
@@ -28,9 +30,8 @@ public class ReverseAList {
 			if (next != null) {
 				next = next.next;
 			}
-			
-
 		}
+		
 		head = prev;
 		return head;
 	}
