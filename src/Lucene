@@ -142,3 +142,18 @@ public class LuceneReindexing {
 
 
 }
+
+tMapping("/search")
+    public String search(@RequestParam String q) {
+        // Decode the URL-encoded query parameter value
+        try {
+            q = URLDecoder.decode(q, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException e) {
+            // Handle the exception if necessary
+            e.printStackTrace();
+        }
+
+        // 'q' now contains the decoded value of the query parameter
+        return searchMethod(q);
+    }
+}
