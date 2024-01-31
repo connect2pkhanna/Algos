@@ -1,0 +1,144 @@
+package com.test;
+
+import java.io.StringReader;
+
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.TextField;
+public class LuceneReindexing {
+    public static void main(String[] args) throws Exception {
+        // Specify the directory for the Lucene index
+        Directory directory = new RAMDirectory();
+
+        // Delete existing index (if any)
+        deleteIndex(directory);
+
+        // Create a new index
+        createIndex(directory);
+
+        // Perform a search with the new index
+        String[] searchStrings = {"why","Indexes","make","queries","faster"}; // Replace with your search query
+        searchIndex(directory, searchStrings);
+    }
+
+    private static void deleteIndex(Directory directory) throws Exception {
+        // Delete the existing index
+        IndexWriterConfig config = new IndexWriterConfig(new StandardAnalyzer());
+        try (IndexWriter indexWriter = new IndexWriter(directory, config)) {
+            indexWriter.deleteAll();
+        }
+    }
+
+    private static void createIndex(Directory directory) throws Exception {
+        // Create a new index (similar to the indexing process in the previous examples)
+        IndexWriterConfig config = new IndexWriterConfig(new StandardAnalyzer());
+        try (IndexWriter indexWriter = new IndexWriter(directory, config)) {
+            // Add documents to the new index
+            indexDocument(indexWriter, "1", "New document for reindexing.Puneet");
+            indexDocument(indexWriter, "2", "Another document to index.");
+            indexDocument(indexWriter, "3", "SQL Indexing is fast");
+            indexDocument(indexWriter, "4", "NO-SQL is not good for consistency");
+            indexDocument(indexWriter, "5", "IPL match");
+            indexDocument(indexWriter, "6", "Indexes make search fast");
+            indexDocument(indexWriter, "7", "Puneet khanna is not fast than most people");
+            indexDocument(indexWriter, "7", "stocks rise slowly with time.");
+            indexDocument(indexWriter, "7", "Time moves fast");
+            indexDocument(indexWriter, "8", "test");
+            indexDocument(indexWriter, "9", "More documents to add and index.");
+            
+            // Add more documents as needed
+        }
+    }
+    private static void indexDocument(IndexWriter indexWriter, String id, String content) throws Exception {
+        Document document = new Document();
+
+        // Log the content before indexing
+        System.out.println("Original Content: " + content);
+
+        FieldType idFieldType = new FieldType();
+        idFieldType.setStored(true);
+        idFieldType.setTokenized(false); // Assuming id is not tokenized
+        document.add(new Field("id", id, idFieldType));
+
+        FieldType contentFieldType = new FieldType();
+        contentFieldType.setStored(true);
+        contentFieldType.setTokenized(true); // Assuming content is tokenized
+        document.add(new TextField("content", content, Field.Store.YES));
+
+        indexWriter.addDocument(document);
+    }
+    private static String analyzeContent(TokenStream tokenStream) throws Exception {
+        StringBuilder result = new StringBuilder();
+        CharTermAttribute charTermAttribute = tokenStream.addAttribute(CharTermAttribute.class);
+
+        tokenStream.reset();
+        while (tokenStream.incrementToken()) {
+            result.append(charTermAttribute.toString()).append(" ");
+        }
+
+        tokenStream.end();
+        tokenStream.close();
+
+        return result.toString().trim();
+    }
+
+
+    private static void searchIndex(Directory directory, String[] searchTerms) throws Exception {
+        IndexSearcher indexSearcher = new IndexSearcher(DirectoryReader.open(directory));
+
+        try {
+            // Specify fields to be searched
+            String[] fields = {"id", "content"};
+
+            // Use MultiFieldQueryParser to search across multiple fields
+            QueryParser queryParser = new MultiFieldQueryParser(fields, new StandardAnalyzer());
+
+            // Create a BooleanQuery to combine multiple terms with OR
+            BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+            for (String term : searchTerms) {
+                Query termQuery = queryParser.parse(term);
+                booleanQueryBuilder.add(new BooleanClause(termQuery, BooleanClause.Occur.SHOULD));
+            }
+            Query query = booleanQueryBuilder.build();
+
+            // Log the actual query being used
+            System.out.println("Executing Lucene Query: " + query.toString());
+
+            // Perform the search
+            TopDocs topDocs = indexSearcher.search(query, 10); // Retrieve top 10 results
+
+            // Display the search results
+            System.out.println("Search results for: " + String.join(" OR ", searchTerms));
+        
+                for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+                    Document document = indexSearcher.doc(scoreDoc.doc);
+                    System.out.println("Document ID: " + document.get("id") + ", Score: " + scoreDoc.score);
+                    System.out.println("Content: " + document.get("content"));
+                    System.out.println("----------------------------------------");
+                }
+           
+        } finally {
+            // Close the IndexSearcher manually in a finally block
+            indexSearcher.getIndexReader().close();
+        }
+    }
+
+
+}
