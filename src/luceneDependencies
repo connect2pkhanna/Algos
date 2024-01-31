@@ -1,0 +1,25 @@
+
+    <!-- testing -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-test-spring-junit5</artifactId>
+      <scope>test</scope>
+    </dependency><dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-core</artifactId>
+        <version>8.10.1</version> <!-- Replace with the latest version available -->
+    </dependency>
+
+    <!-- Lucene QueryParser -->
+    <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-queryparser</artifactId>
+        <version>8.10.1</version> <!-- Replace with the latest version available -->
+    </dependency>
+
+    <!-- Lucene Analyzers Common -->
+    <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-analyzers-common</artifactId>
+        <version>8.10.1</version> <!-- Replace with the latest version available -->
+    </dependency>
