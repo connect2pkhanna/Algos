@@ -157,3 +157,28 @@ tMapping("/search")
         return searchMethod(q);
     }
 }
+
+
+Here's an overview of how it works internally:
+
+Query Execution:
+
+When you call indexSearcher.search(query, 10), The engine takes the specified query and executes it against the Lucene index.
+
+Scoring:
+
+Lucene assigns a relevance score to each document based on how well it matches the query. The scoring algorithm considers factors like term frequency, field length normalization, and other relevance factors.
+Sorting:
+
+The matching documents are sorted by their relevance scores in descending order. Higher scores indicate greater relevance to the query.
+Top N Results:
+
+The TopDocs object is created to hold the top results. It includes an array of ScoreDoc objects, each representing a document and its relevance score.
+The TopDocs object is typically configured to store only the top N results, where N is the number specified in the search method (in this case, 10).
+Retrieval of Document IDs:
+
+The ScoreDoc objects in the TopDocs array contain information about the document's ID and relevance score.
+These document IDs can be used to retrieve the actual documents from the Lucene index or from an external data source (e.g., a database).
+
+
+
