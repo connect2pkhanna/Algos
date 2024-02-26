@@ -1,0 +1,220 @@
+package com.test;
+
+import org.apache.commons.text.similarity.CosineSimilarity;
+
+import java.util.*;
+
+public class StackTraceMapping {
+    public static void main(String[] args) {
+        // Sample stack traces (replace with your actual stack traces)
+        List<String> stackTraces = getSampleStackTraces();
+        
+        // Compute TF-IDF vectors
+        Map<String, Map<String, Double>> tfidfVectors = computeTFIDFVectors(stackTraces);
+        
+        // Compute cosine similarity between TF-IDF vectors
+        double threshold = 0.5; // Adjust the threshold as needed
+        Map<String, Set<String>> similarStackTraces = findSimilarStackTraces(tfidfVectors, stackTraces, threshold);
+        
+        // Print groups of similar stack traces
+        for (Map.Entry<String, Set<String>> entry : similarStackTraces.entrySet()) {
+            System.out.println("Similar Stack Traces for: " + entry.getKey());
+            for (String stackTrace : entry.getValue()) {
+                System.out.println(stackTrace);
+            }
+            System.out.println();
+        }
+    }
+    private static List<String> getSampleStackTraces() {
+        List<String> stackTraces = new ArrayList<>();
+        // Add sample stack traces here
+
+        // Stack traces with same exceptions, method, and class but different timestamps
+        stackTraces.add("[2024-02-21 10:00:00] NullPointerException at method1 in class1\n\tat class1.method1(SourceFile:10)\n\tat class2.method2(SourceFile:20)"+getRandomBody());
+        stackTraces.add("[2024-02-21 10:05:00] NullPointerException at method1 in class1\n\tat class1.method1(SourceFile:10)\n\tat class2.method2(SourceFile:20)"+getRandomBody());
+        stackTraces.add("[2024-02-21 10:10:00] NullPointerException at method1 in class1\n\tat class1.method1(SourceFile:10)\n\tat class2.method2(SourceFile:20)"+getRandomBody());
+        stackTraces.add("[2024-02-21 10:15:00] ArrayIndexOutOfBoundsException at method2 in class2\n\tat class2.method2(SourceFile:20)\n\tat class3.method3(SourceFile:30)"+getRandomBody());
+        stackTraces.add("[2024-02-21 10:20:00] ArrayIndexOutOfBoundsException at method2 in class2\n\tat class2.method2(SourceFile:20)\n\tat class3.method3(SourceFile:30)"+getRandomBody());
+        stackTraces.add("[2024-02-21 10:25:00] ArrayIndexOutOfBoundsException at method2 in class2\n\tat class2.method2(SourceFile:20)\n\tat class3.method3(SourceFile:30)"+getRandomBody());
+        stackTraces.add("[2024-02-21 10:30:00] IllegalArgumentException at method3 in class3\n\tat class3.method3(SourceFile:30)\n\tat class4.method4(SourceFile:40)"+getRandomBody());
+        stackTraces.add("[2024-02-21 10:35:00] IllegalArgumentException at method3 in class3\n\tat class3.method3(SourceFile:30)\n\tat class4.method4(SourceFile:40)"+getRandomBody());
+        stackTraces.add("[2024-02-21 10:40:00] IllegalArgumentException at method3 in class3\n\tat class3.method3(SourceFile:30)\n\tat class4.method4(SourceFile:40)"+getRandomBody());
+        stackTraces.add("[2024-02-21 10:45:00] IllegalStateException at method4 in class4\n\tat class4.method4(SourceFile:40)\n\tat class5.method5(SourceFile:50)"+getRandomBody());
+        stackTraces.add("[2024-02-21 10:50:00] IllegalStateException at method4 in class4\n\tat class4.method4(SourceFile:40)\n\tat class5.method5(SourceFile:50)"+getRandomBody());
+        stackTraces.add("[2024-02-21 10:55:00] IllegalStateException at method4 in class4\n\tat class4.method4(SourceFile:40)\n\tat class5.method5(SourceFile:50)"+getRandomBody());
+        stackTraces.add("[2024-02-21 11:00:00] IndexOutOfBoundsException at method5 in class5\n\tat class5.method5(SourceFile:50)\n\tat class6.method6(SourceFile:60)"+getRandomBody());
+        stackTraces.add("[2024-02-21 11:05:00] IndexOutOfBoundsException at method5 in class5\n\tat class5.method5(SourceFile:50)\n\tat class6.method6(SourceFile:60)"+getRandomBody());
+        stackTraces.add("[2024-02-21 11:10:00] IndexOutOfBoundsException at method5 in class5\n\tat class5.method5(SourceFile:50)\n\tat class6.method6(SourceFile:60)"+getRandomBody());
+        stackTraces.add("[2024-02-21 11:15:00] NoSuchElementException at method6 in class6\n\tat class6.method6(SourceFile:60)\n\tat class7.method7(SourceFile:70)"+getRandomBody());
+        stackTraces.add("[2024-02-21 11:20:00] NoSuchElementException at method6 in class6\n\tat class6.method6(SourceFile:60)\n\tat class7.method7(SourceFile:70)"+getRandomBody());
+        stackTraces.add("[2024-02-21 11:25:00] NoSuchElementException at method6 in class6\n\tat class6.method6(SourceFile:60)\n\tat class7.method7(SourceFile:70)"+getRandomBody());
+        stackTraces.add("[2024-02-21 11:30:00] ClassCastException at method7 in class7\n\tat class7.method7(SourceFile:70)\n\tat class8.method8(SourceFile:80)"+getRandomBody());
+        stackTraces.add("[2024-02-21 11:35:00] ClassCastException at method7 in class7\n\tat class7.method7(SourceFile:70)\n\tat class8.method8(SourceFile:80)"+getRandomBody());
+        stackTraces.add("[2024-02-21 11:40:00] ClassCastException at method7 in class7\n\tat class7.method7(SourceFile:70)\n\tat class8.method8(SourceFile:80)"+getRandomBody());
+
+        return stackTraces;
+    }
+
+    private static String getRandomBody() {
+        // Generate random string for API request body
+        Random random = new Random();
+        int length = random.nextInt(20) + 100;
+        StringBuilder sb = new StringBuilder();
+        int wordCount = 0;
+        int wordLength=5;
+        for (int i = 0; i < length; i++) {
+            if (wordCount == 20) {
+                sb.append("\n"); // Add new line after every 5 words
+                wordCount = 0; // Reset word count
+            }
+            wordLength = random.nextInt(9) + 5; // Word length between 5 and 13 characters
+            for (int j = 0; j < wordLength; j++) {
+                sb.append((char) (random.nextInt(26) + 'a')); // Append random lowercase letter
+            }
+            sb.append(" "); // Add space between words
+            wordCount++;
+        }
+        return sb.toString();
+    }    
+        // Compute TF-IDF vectors for stack traces
+    private static Map<String, Map<String, Double>> computeTFIDFVectors(List<String> stackTraces) {
+        Map<String, Map<String, Double>> tfidfVectors = new HashMap<>();
+        
+        // Tokenize each stack trace and count term frequencies
+        List<Map<String, Integer>> termFrequencies = new ArrayList<>();
+        for (String stackTrace : stackTraces) {
+            Map<String, Integer> termFrequency = new HashMap<>();
+            String[] lines = stackTrace.split("\\n"); // Split stack trace by newline
+            for (String line : lines) {
+                String[] words = line.split("\\s+"); // Split line into words
+                for (String word : words) {
+                    termFrequency.put(word, termFrequency.getOrDefault(word, 0) + 1);
+                }
+            }
+            termFrequencies.add(termFrequency);
+        }
+        
+        
+        
+        // Compute IDF for each term across all stack traces
+        Map<String, Double> inverseDocumentFrequencies = new HashMap<>();
+        int totalDocuments = stackTraces.size();
+        for (Map<String, Integer> termFrequency : termFrequencies) {
+            for (Map.Entry<String, Integer> entry : termFrequency.entrySet()) {
+                String term = entry.getKey();
+                inverseDocumentFrequencies.put(term, inverseDocumentFrequencies.getOrDefault(term, 0.0) + 1);
+            }
+        }
+        for (Map.Entry<String, Double> entry : inverseDocumentFrequencies.entrySet()) {
+            String term = entry.getKey();
+            double df = entry.getValue();
+            double idf = Math.log((double) totalDocuments / df);
+            inverseDocumentFrequencies.put(term, idf);
+        }
+        
+        // Compute TF-IDF vectors
+        for (int i = 0; i < stackTraces.size(); i++) {
+            String currentStackTrace = stackTraces.get(i);
+            Map<String, Double> tfidfVector = new HashMap<>();
+            for (String term : currentStackTrace.split("\\s+")) {
+                int tf = termFrequencies.get(i).get(term);
+                double idf = inverseDocumentFrequencies.get(term);
+                double tfidf = tf * idf;
+                tfidfVector.put(term, tfidf);
+            }
+            tfidfVectors.put(currentStackTrace, tfidfVector);
+        }
+        
+        return tfidfVectors;
+    }
+    
+    // Compute cosine similarity between TF-IDF vectors
+    private static Map<String, Set<String>> findSimilarStackTraces(Map<String, Map<String, Double>> tfidfVectors, List<String> stackTraces, double threshold) {
+        Map<String, Set<String>> similarStackTraces = new HashMap<>();
+        CosineSimilarity cosineSimilarity = new CosineSimilarity();
+        
+        // Union-Find data structure to merge similar stack traces
+        Map<String, String> parent = new HashMap<>();
+        for (String stackTrace : stackTraces) {
+            parent.put(stackTrace, stackTrace);
+        }
+        
+        for (int i = 0; i < stackTraces.size(); i++) {
+            String currentStackTrace = stackTraces.get(i);
+            Set<String> similarStackTracesForTrace = new HashSet<>();
+            
+            for (int j = i + 1; j < stackTraces.size(); j++) {
+                String comparisonStackTrace = stackTraces.get(j);
+                Map<CharSequence, Integer> currentVector = convertToCharSequenceIntegerMap(tfidfVectors.get(currentStackTrace));
+                Map<CharSequence, Integer> comparisonVector = convertToCharSequenceIntegerMap(tfidfVectors.get(comparisonStackTrace));
+                
+                double similarity = computeCosineSimilarity(tfidfVectors.get(currentStackTrace), tfidfVectors.get(comparisonStackTrace));
+                if (similarity >= threshold) {
+                    // Merge sets using Union-Find
+                    union(parent, currentStackTrace, comparisonStackTrace);
+                }
+            }
+        }
+        
+        // Group similar stack traces
+        for (String stackTrace : stackTraces) {
+            String root = find(parent, stackTrace);
+            similarStackTraces.computeIfAbsent(root, k -> new HashSet<>()).add(stackTrace);
+        }
+        
+        return similarStackTraces;
+    }
+    
+    // Find operation in Union-Find
+    private static String find(Map<String, String> parent, String stackTrace) {
+        if (!parent.get(stackTrace).equals(stackTrace)) {
+            parent.put(stackTrace, find(parent, parent.get(stackTrace))); // Path compression
+        }
+        return parent.get(stackTrace);
+    }
+    
+    // Union operation in Union-Find
+    private static void union(Map<String, String> parent, String stackTrace1, String stackTrace2) {
+        String root1 = find(parent, stackTrace1);
+        String root2 = find(parent, stackTrace2);
+        if (!root1.equals(root2)) {
+            parent.put(root1, root2);
+        }
+    }
+    
+ // Convert Map<String, Double> to Map<CharSequence, Integer>
+    private static Map<CharSequence, Integer> convertToCharSequenceIntegerMap(Map<String, Double> inputMap) {
+        Map<CharSequence, Integer> result = new HashMap<>();
+        for (Map.Entry<String, Double> entry : inputMap.entrySet()) {
+            result.put(entry.getKey(), entry.getValue().intValue());
+        }
+        return result;
+    }
+    
+    public static double computeCosineSimilarity(Map<String, Double> vectorA, Map<String, Double> vectorB) {
+        // Compute dot product
+        double dotProduct = 0;
+        for (String term : vectorA.keySet()) {
+            if (vectorB.containsKey(term)) {
+                dotProduct += vectorA.get(term) * vectorB.get(term);
+            }
+        }
+
+        // Compute magnitudes
+        double magnitudeA = computeMagnitude(vectorA);
+        double magnitudeB = computeMagnitude(vectorB);
+
+        // Compute cosine similarity
+        double similarity = dotProduct / (magnitudeA * magnitudeB);
+
+        return similarity;
+    }
+
+    private static double computeMagnitude(Map<String, Double> vector) {
+        double magnitude = 0;
+        for (double value : vector.values()) {
+            magnitude += value * value;
+        }
+        return Math.sqrt(magnitude);
+    }
+}
