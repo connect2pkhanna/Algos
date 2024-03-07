@@ -1,0 +1,67 @@
+private static List<String> getSampleEmails() {
+    List<String> emails = new ArrayList<>();
+    
+    // Email 1: Transaction notification
+    emails.add("Dear Bank,  I recently made a transaction of $500 from my account. Please confirm if the transaction was successful.  Regards,  John");
+
+    // Email 2: Transaction issue
+    emails.add("Hi,  I am writing to report an issue with a transaction that I made yesterday. The amount of $200 was debited from my account, but the recipient has not received it yet. Please investigate and resolve this issue as soon as possible.  Thank you,  Alice");
+
+    // Email 3: Account balance inquiry
+    emails.add("Dear Customer Support,  I would like to inquire about the current balance in my savings account. Can you please provide me with the latest balance?  Best regards,  David");
+
+    // Email 4: Card replacement request
+    emails.add("Hello,  I lost my debit card yesterday and would like to request a replacement card as soon as possible. Please let me know the procedure to get a new card.  Thank you,  Sarah");
+
+    // Email 5: Change of address notification
+    emails.add("Dear Bank Manager,  I recently moved to a new address and would like to update my mailing address on file. Please update your records accordingly.  Regards,  Michael");
+
+    // Email 6: Transaction dispute
+    emails.add("Hi,  I am writing to dispute a transaction on my credit card statement. There is a charge of $100 that I do not recognize. Please investigate and reverse the unauthorized charge.  Sincerely,  Emily");
+
+    // Email 7: Account statement request
+    emails.add("Dear Customer Service,  I need a copy of my account statement for the month of February for tax purposes. Can you please email it to me?  Thank you,  Daniel");
+
+    // Email 8: Change of phone number notification
+    emails.add("Hello,  I recently got a new phone number and need to update it in my account profile. Please update my contact information accordingly.  Best regards,  Jessica");
+
+    // Email 9: Account closure request
+    emails.add("Dear Bank,  I would like to close my savings account with account number XXXXXXXX. Please confirm the necessary steps to close the account and transfer the remaining balance to my linked account.  Regards,  Alex");
+
+    // Email 10: Overdraft notification
+    emails.add("Hi,  I received an overdraft fee on my checking account statement. I was not aware that my account balance went below zero. Can you please waive the overdraft fee?  Thank you,  Mark");
+
+    // Email 11: Transaction confirmation
+    emails.add("Dear Bank,  I initiated a transfer of $300 to my friend's account yesterday. Can you confirm if the transfer was successful?  Regards,  Laura");
+
+    // Email 12: Credit card limit increase request
+    emails.add("Hello,  I would like to request an increase in the credit limit on my credit card. My current limit of $2000 is not sufficient for my needs. Please let me know the process to request a higher limit.  Thank you,  Ryan");
+
+    // Email 13: Lost checkbook notification
+    emails.add("Dear Customer Support,  I misplaced my checkbook and suspect it might be lost. Can you please block the checks associated with my account to prevent any unauthorized use?  Best regards,  Sophia");
+
+    // Email 14: Account activation request
+    emails.add("Hi,  I recently opened a new savings account with your bank and received the account details. However, I'm unable to access the account online. Can you please activate my account for online banking?  Sincerely,  John");
+
+    // Email 15: Credit card payment confirmation
+    emails.add("Dear Bank,  I made a payment of $150 towards my credit card bill yesterday. Can you confirm if the payment has been applied to my account?  Regards,  Alice");
+
+    // Email 16: Unauthorized transaction alert
+    emails.add("Hello,  I just noticed a transaction on my account statement that I did not authorize. Someone withdrew $500 from my account without my knowledge. Please investigate and reverse the transaction.  Thank you,  David");
+
+    // Email 17: Update of beneficiary details
+    emails.add("Dear Bank Manager,  I recently got married and need to update the beneficiary details on my accounts. Please let me know the process to update the beneficiary information.  Regards,  Sarah");
+
+    // Email 18: Account freeze request
+    emails.add("Hi,  I suspect fraudulent activity on my account and would like to request a temporary freeze on my account. Please block any transactions until I confirm the security of my account.  Sincerely,  Michael");
+
+    // Email 19: Direct deposit setup request
+    emails.add("Dear Bank,  I would like to set up direct deposit for my salary. Can you please provide me with the necessary forms and instructions to set up direct deposit?  Regards,  Emily");
+
+    // Email 20: Transaction error correction
+    emails.add("Hello,  I made a payment of $50 towards my utility bill yesterday, but I accidentally entered the wrong account number. The payment was deducted from my account, but it was not credited to the utility company. Can you please correct the account number and reprocess the payment?  Thank you,  Daniel");
+
+    // Add more emails...
+
+    return emails;
+}
