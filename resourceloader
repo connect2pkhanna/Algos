@@ -1,0 +1,50 @@
+import org.apache.lucene.analysis.CharArraySet;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.stereotype.Component;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashSet;
+import java.util.Set;
+
+@Component
+public class CustomStopWordsLoader {
+
+    private final ResourceLoader resourceLoader;
+
+    public CustomStopWordsLoader(ResourceLoader resourceLoader) {
+        this.resourceLoader = resourceLoader;
+    }
+
+    public CharArraySet loadCustomStopWords() throws IOException {
+        // Get the default English stop words set from Lucene
+        CharArraySet defaultStopWords = EnglishAnalyzer.getDefaultStopSet();
+
+        // Load custom stop words from the text file
+        Set<String> customStopWords = loadCustomStopWordsFromFile("custom_stopwords.txt");
+
+        // Merge the default stop words set with the custom stop words set
+        CharArraySet mergedStopWords = new CharArraySet(defaultStopWords.size() + customStopWords.size(), true);
+        mergedStopWords.addAll(defaultStopWords);
+        mergedStopWords.addAll(CharArraySet.copy(customStopWords));
+
+        return mergedStopWords;
+    }
+
+    private Set<String> loadCustomStopWordsFromFile(String fileName) throws IOException {
+        Set<String> stopWords = new HashSet<>();
+        Resource resource = resourceLoader.getResource("classpath:" + fileName);
+        try (InputStream inputStream = resource.getInputStream();
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stopWords.add(line.trim());
+            }
+        }
+        return stopWords;
+    }
+}
