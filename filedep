@@ -1,0 +1,69 @@
+import java.util.*;
+import edu.stanford.nlp.pipeline.*;
+import edu.stanford.nlp.ling.*;
+import edu.stanford.nlp.semgraph.*;
+import edu.stanford.nlp.util.logging.RedwoodConfiguration;
+
+public class IntentFromRootWord {
+
+    public static void main(String[] args) {
+        // Disable Stanford NLP logging to avoid unnecessary output
+        RedwoodConfiguration.current().clear().apply();
+
+        // Example email content
+        String[] emails = {
+            "Hi, I'm following up on my recent transaction with ID 1234. Can you please check its status?",
+            "My transaction with ID 5678 seems to be blocked. Could you please unblock it?",
+            "I'm not satisfied with my purchase. Can I request a refund for order number 9012?",
+            "I'd like to cancel my subscription. Please let me know the procedure.",
+            "I've changed my address. How can I update it in my account?",
+            "I'm experiencing issues with logging into my account. Can you assist me with troubleshooting?",
+            "I'm interested in purchasing your product. Can you provide more information about its features?",
+            "I received a damaged product. I'm very disappointed with the quality.",
+            "I'd like to schedule an appointment for next week. Can you please let me know your availability?",
+            "I wanted to provide feedback regarding my recent experience with your service. Where can I do that?"
+        };
+
+        // Create StanfordCoreNLP object with dependency parsing enabled
+        Properties props = new Properties();
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, depparse");
+        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+
+        // Process each email
+        for (String email : emails) {
+            // Annotate the email content
+            Annotation annotation = new Annotation(email);
+            pipeline.annotate(annotation);
+
+            // Get the dependency graph
+            List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
+            if (sentences != null && !sentences.isEmpty()) {
+                CoreMap sentenceMap = sentences.get(0);
+                SemanticGraph dependencies = sentenceMap.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
+
+                // Get root words and their subjects/dependencies
+                Map<String, List<String>> rootInfo = new HashMap<>();
+                for (IndexedWord root : dependencies.getRoots()) {
+                    String rootLemma = root.lemma();
+                    List<String> dependents = new ArrayList<>();
+                    for (SemanticGraphEdge edge : dependencies.outgoingEdgeList(root)) {
+                        dependents.add(edge.getDependent().originalText());
+                    }
+                    rootInfo.put(rootLemma, dependents);
+                }
+
+                // Print email content
+                System.out.println("Email Content: \"" + email + "\"");
+                // Print root words and their subjects/dependencies
+                System.out.println("Root words and their subjects/dependencies:");
+                for (Map.Entry<String, List<String>> entry : rootInfo.entrySet()) {
+                    System.out.println("- Root word: " + entry.getKey());
+                    System.out.println("  Dependents: " + entry.getValue());
+                }
+                System.out.println();
+            } else {
+                System.out.println("No sentences found.");
+            }
+        }
+    }
+}
