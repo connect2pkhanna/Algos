@@ -1,0 +1,309 @@
+package com.test;
+
+import java.util.*;
+import edu.stanford.nlp.pipeline.*;
+import edu.stanford.nlp.ling.*;
+import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
+import edu.stanford.nlp.semgraph.*;
+import edu.stanford.nlp.util.CoreMap;
+import edu.stanford.nlp.util.logging.RedwoodConfiguration;
+
+public class ConsiderAllRootsAndImportantWords {
+
+    // Set of important dependency types
+//    private static final Set<String> IMPORTANT_DEPENDENCY_TYPES = new HashSet<>(Arrays.asList(
+//            "nsubj", "nsubjpass", "dobj", "iobj", "pobj", "csubj", "csubjpass", "ccomp", "xcomp"
+//    ));
+	
+	private static final Set<String> IMPORTANT_DEPENDENCY_TYPES = new HashSet<>(Arrays.asList(
+		     "nsubjpass", "dobj", "iobj", "pobj", "csubj", "csubjpass", "ccomp", "xcomp", "compound","obl","obj","advmod","nsubj"
+		));
+
+    public static void main(String[] args) {
+        // Disable Stanford NLP logging to avoid unnecessary output
+        //RedwoodConfiguration.current().clear().apply();
+        Set<String> stopwords= new HashSet();
+        stopwords.add("I".toLowerCase());
+        stopwords.add("you".toLowerCase());
+        stopwords.add("me".toLowerCase());
+        stopwords.add("it".toLowerCase());
+        stopwords.add("We".toLowerCase());
+
+
+        // Example email content
+        String[] emails = {
+            "Hi, I'm following up on my recent transaction with ID 1234. Can you please check its status?",
+            "My transaction with ID 5678 seems to be blocked. Could you please unblock it?",
+           "How can i revert the transaction 56577 which was initiated on 01-01-1977",
+           "We would like to get a new cheque book issued for my account 8788, please guide",
+           "I've changed my address to 78 d Street , Brookfields . How can I update it in my account?",
+           "I'm experiencing issues with logging into my account. Can you assist me with troubleshooting?",
+           "Could you please  update the new phone number 9538004119 on the account id 787878",
+           "could you please update the contact email kpuneet@jhj.com from our side on the account 4567",
+           "could you please extend the credit limit to 25000$ on our account",
+           " could you please add the service mutual funds (Quant Mid Cap, Nippon Mid Cap) on our account 87897 ",
+           "Could you please see how soon the fund transfer of $6500  can happen to account 89790, it was initated on 9-9-1787"
+                 };
+
+        // Create StanfordCoreNLP object with dependency parsing enabled
+        Properties props = new Properties();
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma,ner, depparse,coref");
+        StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+        
+        
+        Map<String, Set<String>> emailVectors= new HashMap();
+        
+        // Process each email
+        for (String email : emails) {
+        	   Set<String> vector = new HashSet<>();
+            // Annotate the email content
+            Annotation annotation = new Annotation(email);
+            pipeline.annotate(annotation);
+            
+            // Get the dependency graph
+            List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
+            if (sentences != null && !sentences.isEmpty()) {
+                // Print email content
+            	  System.out.print(" ====================================================================== ");
+                System.out.println("Email Content: \"" + email + "\"");
+                // Print root words and their important dependencies for each sentence
+             //   System.out.println("Root words and their important dependencies:");
+                for (CoreMap sentenceMap : sentences) {
+                    SemanticGraph dependencies = sentenceMap.get(SemanticGraphCoreAnnotations.CollapsedDependenciesAnnotation.class);
+                    
+                    // Find the main subject of the sentence
+                    String mainSubject = findSubject(dependencies);
+               
+                    
+                    for (CoreLabel token : sentenceMap.get(CoreAnnotations.TokensAnnotation.class)) {
+                        String word = token.word();
+                        String ner = token.get(NamedEntityTagAnnotation.class);
+                        if (!ner.equals("O")) { System.out.println("Word: " + word + ", NER Type: " + ner);
+                    }
+                    }
+                        
+                        
+                    String mverb = findMainVerb(dependencies);
+                    
+                    // Print the subject
+                   // System.out.println("main sub: " + mainSubject+" ,  main verb: "+mverb);
+                    
+                 // Find subjects, verbs, and objects in the sentence
+                    List<IndexedWord> subjects = findSubjects(dependencies);
+                    List<IndexedWord> verbs = findVerbs(dependencies);
+                    List<IndexedWord> objects = findObjects(dependencies);
+                    List<String> nouns = extractNouns(dependencies);
+                   //.out.print("  ");
+                  //  System.out.print("verbs:=>  ");
+                    for (IndexedWord verb : verbs) {
+                      //  System.out.print(verb.originalText()+" , ");
+                    	if(!stopwords.contains(verb.originalText()))  vector.add(verb.originalText());
+                    }
+                  //  System.out.print("  ");
+                    // Print the found noun phrases
+                  //  System.out.print("Subjects:=>  ");
+                    for (IndexedWord subject : subjects) {
+                   //     System.out.print(subject.originalText()+" , ");
+                    	if(!stopwords.contains(subject.originalText())) vector.add(subject.originalText());
+                    }
+                  //  System.out.print("  ");
+                  //  System.out.print("Objects:=> ");
+                    for (IndexedWord object : objects) {
+                    //    System.out.print(object.originalText()+" , ");
+                    	if(!stopwords.contains(object.originalText()))vector.add(object.originalText());
+                    }
+                  //  System.out.print("  ");
+                    
+                  //  System.out.print("  ");
+                //    System.out.print("Nouns:=> ");
+                    for (String noun : nouns) {
+                      //  System.out.print(noun+" , ");
+                    	if(!stopwords.contains(noun)) vector.add(noun);
+                    }
+                  
+                    // Get root words
+                    Collection<IndexedWord> rootsCollection = dependencies.getRoots();
+                    List<IndexedWord> roots = new ArrayList<>(rootsCollection); // Convert Collection to List
+                    for (IndexedWord root : roots) {
+                        // Get all dependents of the root word
+                              List<String> dependents = new ArrayList<>();
+                        for (SemanticGraphEdge edge : dependencies.outgoingEdgeList(root)) {
+                        	//System.out.println("edge "+edge.toString()+" relation "+edge.getRelation().getShortName());
+                            if (IMPORTANT_DEPENDENCY_TYPES.contains(edge.getRelation().getShortName())) {
+                              if(!stopwords.contains(edge.getDependent().originalText().toLowerCase()))  dependents.add(edge.getDependent().originalText());
+                            }
+                        }
+                     
+                        vector.add(root.originalText());
+                        for(String dependency : dependents)  vector.add(dependency);
+                        // Print root word and its important dependencies
+                     
+                    
+                        
+                    }
+                   
+                   
+                  
+                }
+             
+            } else {
+                System.out.println("No sentences found.");
+            }
+           
+            // Print the set in one line
+            System.out.println("Vectors =>  { " + String.join(", ", vector) + " }");
+            emailVectors.put(email, vector);
+        }
+        
+        // Calculate and print similarity between each pair of emails
+        for (int i = 0; i < emails.length; i++) {
+            for (int j = i + 1; j < emails.length; j++) {
+                String email1 = emails[i];
+                String email2 = emails[j];
+                Set<String> vector1 = emailVectors.get(email1);
+                Set<String> vector2 = emailVectors.get(email2);
+                double similarity = calculateCosineSimilarity(vector1, vector2);
+                System.out.println("vector1 "+vector1.toString()+" vector2 "+vector2.toString());
+                System.out.println("Cosine Similarity between email " + email1 + " and email " + email2 + ": " + similarity);
+                double jaccardSimilarity = calculateJaccardSimilarity(vector1, vector2);
+                System.out.println("jaccardSimilarity  between email " + email1 + " and email " + email2 + ": " + jaccardSimilarity);
+                double diceCoefficient = calculateDiceCoefficient(vector1, vector2);
+                System.out.println("diceCoefficient  between email " + email1 + " and email " + email2 + ": " + diceCoefficient);
+                double calculateOverlapCoefficient = calculateOverlapCoefficient(vector1, vector2);
+                System.out.println("diceCoefficient  between email " + email1 + " and email " + email2 + ": " + calculateOverlapCoefficient);
+            }
+            System.out.println(" ");
+        }
+    }
+      
+    private static  double calculateJaccardSimilarity(Set<String> set1, Set<String> set2) {
+        // Tokenize the strings into sets of words
+      
+
+        // Calculate the intersection of the two sets
+        Set<String> intersection = new HashSet<>(set1);
+        intersection.retainAll(set2);
+
+        // Calculate the union of the two sets
+        Set<String> union = new HashSet<>(set1);
+        union.addAll(set2);
+
+        // Calculate the Jaccard similarity coefficient
+        double similarity = (double) intersection.size() / union.size();
+        return similarity;
+    }
+    private static double calculateDiceCoefficient(Set<String> set1, Set<String> set2) {
+        // Calculate intersection size
+        Set<String> intersection = new HashSet<>(set1);
+        intersection.retainAll(set2);
+        int intersectionSize = intersection.size();
+        
+        // Calculate Dice coefficient
+        double diceCoefficient = 2.0 * intersectionSize / (set1.size() + set2.size());
+        return diceCoefficient;
+    }
+
+        
+    private static double calculateCosineSimilarity(Set<String> vector1, Set<String> vector2) {
+        Set<String> intersection = new HashSet<>(vector1);
+        intersection.retainAll(vector2);
+        double dotProduct = intersection.size();
+        double magnitude1 = Math.sqrt(vector1.size());
+        double magnitude2 = Math.sqrt(vector2.size());
+        return dotProduct / (magnitude1 * magnitude2);
+    }
+    private static double calculateOverlapCoefficient(Set<String> set1, Set<String> set2) {
+        // Calculate intersection size
+        Set<String> intersection = new HashSet<>(set1);
+        intersection.retainAll(set2);
+        int intersectionSize = intersection.size();
+        
+        // Calculate Overlap coefficient
+        double overlapCoefficient = (double) intersectionSize / Math.min(set1.size(), set2.size());
+        return overlapCoefficient;
+    }
+    
+    
+    // Method to find the main subject of a sentence from its dependency graph
+    private static String findSubject(SemanticGraph dependencies) {
+        for (IndexedWord root : dependencies.getRoots()) {
+            // Find the main subject by looking for "nsubj" relations
+            for (SemanticGraphEdge edge : dependencies.outgoingEdgeList(root)) {
+                if (edge.getRelation().toString().equals("nsubj")) {
+                    return edge.getTarget().originalText();
+                }
+            }
+        }
+        return "Subject not found"; // Return this if no subject is found
+    }
+    
+ // Method to find the main verb of a sentence from its dependency graph
+    private static String findMainVerb(SemanticGraph dependencies) {
+        for (IndexedWord root : dependencies.getRoots()) {
+            // Find the main verb by looking for "root" relation
+            if (root.tag().startsWith("VB")) {
+                return root.originalText();
+            }
+        }
+        return "Verb not found"; // Return this if no verb is found
+    }
+    // Method to find subjects in a sentence
+    private static List<IndexedWord> findSubjects(SemanticGraph dependencies) {
+        List<IndexedWord> subjects = new ArrayList<>();
+        for (IndexedWord root : dependencies.getRoots()) {
+            for (SemanticGraphEdge edge : dependencies.outgoingEdgeList(root)) {
+                if (edge.getRelation().toString().equals("nsubj") || edge.getRelation().toString().equals("nsubjpass")) {
+                    subjects.add(edge.getTarget());
+                }
+            }
+        }
+        return subjects;
+    }
+
+    // Method to find verbs in a sentence
+    private static List<IndexedWord> findVerbs(SemanticGraph dependencies) {
+        List<IndexedWord> verbs = new ArrayList<>();
+        for (IndexedWord root : dependencies.getRoots()) {
+            if (root.tag().startsWith("VB")) {
+                verbs.add(root);
+            }
+        }
+        return verbs;
+    }
+
+    // Method to find objects in a sentence
+    private static List<IndexedWord> findObjects(SemanticGraph dependencies) {
+        List<IndexedWord> objects = new ArrayList<>();
+        for (IndexedWord root : dependencies.getRoots()) {
+            for (SemanticGraphEdge edge : dependencies.outgoingEdgeList(root)) {
+                if (edge.getRelation().toString().equals("dobj")) {
+                    objects.add(edge.getTarget());
+                }
+            }
+        }
+        return objects;
+    }
+    
+    // Method to extract nouns from SemanticGraph dependencies
+    private static List<String> extractNouns(SemanticGraph dependencies) {
+        List<String> nouns = new ArrayList<>();
+        for (IndexedWord word : dependencies.vertexSet()) {
+            String pos = word.tag();
+            if (pos.startsWith("NN")) { // NN for singular nouns, NNS for plural nouns
+                nouns.add(word.originalText());
+            }
+        }
+        return nouns;
+    }
+    
+    private static List<String> extractNerTypes(CoreMap sentenceMap) {
+        List<String> nerTypes = new ArrayList<>();
+        for (CoreLabel token : sentenceMap.get(CoreAnnotations.TokensAnnotation.class)) {
+            String ner = token.get(NamedEntityTagAnnotation.class);
+            if (!ner.equals("O")) {
+                nerTypes.add(ner);
+            }
+        }
+        return nerTypes;
+    }
+}
