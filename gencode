@@ -1,0 +1,67 @@
+import React, { useState } from "react";
+import "./App.css";
+
+function App() {
+  const [inputText, setInputText] = useState("");
+  const [userUrl, setUserUrl] = useState("");
+  const [response, setResponse] = useState("");
+
+  const handleInputChange = (event) => {
+    setInputText(event.target.value);
+  };
+
+  const handleUrlChange = (event) => {
+    setUserUrl(event.target.value);
+  };
+
+  const callApi = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:5000/generate_code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ input_text: inputText, user_url: userUrl }),
+      });
+      const data = await response.json();
+      setResponse(data.generated_code || "No response received");
+    } catch (error) {
+      console.error("Error:", error);
+      setResponse("Error occurred while calling the API");
+    }
+  };
+
+  return (
+    <div className="App">
+      <h1>API Caller</h1>
+      <div>
+        <label htmlFor="inputText">Input Text:</label>
+        <textarea
+          id="inputText"
+          value={inputText}
+          onChange={handleInputChange}
+          rows={5}
+          cols={50}
+        />
+      </div>
+      <div>
+        <label htmlFor="userUrl">User URL:</label>
+        <input
+          type="text"
+          id="userUrl"
+          value={userUrl}
+          onChange={handleUrlChange}
+        />
+      </div>
+      <div>
+        <button onClick={callApi}>Call API</button>
+      </div>
+      <div>
+        <h2>Response:</h2>
+        <pre>{response}</pre>
+      </div>
+    </div>
+  );
+}
+
+export default App;
