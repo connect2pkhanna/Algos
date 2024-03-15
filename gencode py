@@ -1,0 +1,181 @@
+import spacy
+import random
+from flask import Flask, request, jsonify, make_response
+from spacy.training import Example  # Importing Example class from spacy.training
+from flask_cors import CORS  # Import CORS from flask_cors
+
+# Training data
+TRAINING_DATA = [
+    ("Make a GET request to /api/data", {"cats": {"GET": 1.0, "POST": 0.0, "DELETE": 0.0}}, """
+    import org.apache.http.client.methods.HttpGet;
+    import org.apache.http.impl.client.CloseableHttpClient;
+    import org.apache.http.impl.client.HttpClients;
+    import org.apache.http.util.EntityUtils;
+
+    CloseableHttpClient httpClient = HttpClients.createDefault();
+    HttpGet httpGet = new HttpGet("http://your-api-url/api/data");
+
+    // Logging response code
+    try {
+        CloseableHttpResponse response = httpClient.execute(httpGet);
+        int statusCode = response.getStatusLine().getStatusCode();
+        System.out.println("Response Code: " + statusCode);
+        // Further processing if needed
+        response.close();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    """
+    ),
+    ("Create a new resource via POST at /api/resource", {"cats": {"GET": 0.0, "POST": 1.0, "DELETE": 0.0}}, """
+    import org.apache.http.client.methods.HttpPost;
+    import org.apache.http.impl.client.CloseableHttpClient;
+    import org.apache.http.impl.client.HttpClients;
+    import org.apache.http.util.EntityUtils;
+
+    CloseableHttpClient httpClient = HttpClients.createDefault();
+    HttpPost httpPost = new HttpPost("http://your-api-url/api/resource");
+
+    // Logging response code
+    try {
+        CloseableHttpResponse response = httpClient.execute(httpPost);
+        int statusCode = response.getStatusLine().getStatusCode();
+        System.out.println("Response Code: " + statusCode);
+        // Further processing if needed
+        response.close();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    """
+    ),
+    ("Delete resource with ID 123 via DELETE", {"cats": {"GET": 0.0, "POST": 0.0, "DELETE": 1.0}}, """
+    import org.apache.http.client.methods.HttpDelete;
+    import org.apache.http.impl.client.CloseableHttpClient;
+    import org.apache.http.impl.client.HttpClients;
+    import org.apache.http.util.EntityUtils;
+
+    CloseableHttpClient httpClient = HttpClients.createDefault();
+    HttpDelete httpDelete = new HttpDelete("http://your-api-url/resource/123");
+
+    // Logging response code
+    try {
+        CloseableHttpResponse response = httpClient.execute(httpDelete);
+        int statusCode = response.getStatusLine().getStatusCode();
+        System.out.println("Response Code: " + statusCode);
+        // Further processing if needed
+        response.close();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    """
+    )
+]
+
+# Define the training configuration
+config = {
+    "pipeline": ["textcat"],
+    "threshold": 0.5,
+    "textcat": {
+        "exclusive_classes": True,
+        "architecture": "simple_cnn",
+        "n_iter": 10
+    }
+}
+
+# Define the CodeGenerator class
+class CodeGenerator:
+    def __init__(self, nlp):
+        self.nlp = nlp
+
+    def generate_code(self, input_text, user_url):
+        # Classify input text
+        doc = self.nlp(input_text)
+        predicted_label = max(doc.cats, key=doc.cats.get)
+
+        # Find the code sample corresponding to the predicted label
+        code_sample = next((code for text, annotations, code in TRAINING_DATA if annotations['cats'][predicted_label] == 1.0), None)
+
+        # If code sample exists for the predicted label, return it; otherwise, return None
+        if code_sample:
+            # Replace placeholder URL with the user-provided URL
+            generated_code = code_sample.replace("http://your-api-url", user_url)
+            # If predicted label is "POST", process request body
+            if predicted_label == "POST":
+                # Process request body here based on input_text
+                # For example, you can extract relevant information from input_text and construct the body accordingly
+                # For demonstration, let's assume input_text contains JSON data
+                json_body = '{"name": "John Doe", "age": 30}'  # Example JSON body
+                # Append request body to the generated code
+                generated_code = generated_code.replace("// Place holder for request body", f"String jsonBody = {json_body};\nhttpPost.setEntity(new StringEntity(jsonBody));")
+            return generated_code
+        else:
+            return None
+
+def train_model():
+    from spacy.training import Example  # Add this import statement
+    # Initialize a blank English model with the text classification component
+    nlp = spacy.blank("en")
+    textcat = nlp.add_pipe("textcat")
+
+    # Add labels to the text classifier
+    textcat.add_label("GET")
+    textcat.add_label("POST")
+    textcat.add_label("DELETE")
+
+    # Train the model
+    random.seed(1)
+    spacy.util.fix_random_seed(1)
+    optimizer = nlp.begin_training()
+
+    for i in range(10):  # Number of iterations
+        random.shuffle(TRAINING_DATA)
+        losses = {}
+        for text, annotations, code in TRAINING_DATA:
+            doc = nlp.make_doc(text)
+            example = Example.from_dict(doc, annotations)
+            nlp.update([example], losses=losses, sgd=optimizer)
+
+    # Save the trained model
+    nlp.to_disk("spacy_model")
+
+# Initialize Flask app
+app = Flask(__name__)
+CORS(app)  # Allow all origins
+
+# Load the trained model
+nlp = spacy.load("spacy_model")
+
+# Create an instance of the code generator
+generator = CodeGenerator(nlp)
+
+# Train the model when the service starts
+train_model()
+
+# Define route to handle OPTIONS requests (preflight)
+@app.route('/generate_code', methods=['OPTIONS'])
+def options_request():
+    response = make_response()
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'POST'
+    return response
+
+# Define route to handle API requests
+@app.route('/generate_code', methods=['POST'])
+def generate_code():
+    data = request.get_json()
+    input_text = data.get('input_text')
+    user_url = data.get('user_url')
+
+    if not input_text or not user_url:
+        return jsonify({'error': 'Input text and user URL are required.'}), 400
+
+    generated_code = generator.generate_code(input_text, user_url)
+    if generated_code:
+        response = make_response(jsonify({'generated_code': generated_code}), 200)
+        return response
+    else:
+        return jsonify({'error': 'Failed to generate code.'}), 500
+
+if __name__ == "__main__":
+    app.run(debug=True)
