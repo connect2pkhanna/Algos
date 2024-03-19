@@ -1,1 +1,18 @@
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+<Router>
+      <div className="App">
+        <header className="App-header">
+          <h1>Welcome to My React App</h1>
+        </header>
+        <main>
+          <Switch>
+            <Route path="/logs">
+              <Logs />
+            </Route>
+            <Route path="/">
+              {/* Your main content */}
+            </Route>
+          </Switch>
+        </main>
+      </div>
+    </Router>
