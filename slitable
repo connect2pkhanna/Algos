@@ -50,4 +50,26 @@ const MyDataGrid = () => {
   );
 };
 
+
+
+// Custom cell renderer to set color based on value
+  const renderCell = (params) => {
+    const { field, value } = params;
+    if (field === 'name') {
+      // Return the value without applying color if the field is 'name'
+      return <div>{value}</div>;
+    }
+    const color = value < 100 ? 'red' : 'inherit'; // Change color to red if value is less than 100
+    return <div style={{ color }}>{value}</div>;
+  };
+
+  // Custom column definitions to use the custom cell renderer
+  const columnsWithRenderers = columns.map(column => ({
+    ...column,
+    renderCell: (params) => renderCell(params),
+  }));
+
+
+
+
 export default MyDataGrid;
