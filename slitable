@@ -1,0 +1,53 @@
+import React, { useState, useEffect } from 'react';
+import { DataGrid } from '@mui/x-data-grid';
+
+const MyDataGrid = () => {
+  const [data, setData] = useState([]);
+
+  // Fetch data from API
+  useEffect(() => {
+    fetchDataFromAPI();
+  }, []);
+
+  const fetchDataFromAPI = async () => {
+    // Fetch data from your API
+    // For demonstration purposes, let's assume the API returns an array of objects
+    const apiData = await fetch('your_api_endpoint_here');
+    const jsonData = await apiData.json();
+    setData(jsonData);
+  };
+
+  const columns = [
+    { field: 'name', headerName: 'Name', width: 150 },
+    { field: '7d', headerName: '7d', width: 100 },
+    { field: '30d', headerName: '30d', width: 100 },
+    { field: '60d', headerName: '60d', width: 100 },
+  ];
+
+  // Custom cell renderer to set color based on value
+  const renderCell = (params) => {
+    const value = params.value;
+    const color = value < 100 ? 'red' : 'inherit'; // Change color to red if value is less than 100
+    return <div style={{ color }}>{value}</div>;
+  };
+
+  // Custom column definitions to use the custom cell renderer
+  const columnsWithRenderers = columns.map(column => ({
+    ...column,
+    renderCell: (params) => renderCell(params),
+  }));
+
+  return (
+    <div style={{ height: 400, width: '100%' }}>
+      <DataGrid
+        rows={data}
+        columns={columnsWithRenderers}
+        pageSize={5}
+        rowsPerPageOptions={[5]}
+        checkboxSelection
+      />
+    </div>
+  );
+};
+
+export default MyDataGrid;
