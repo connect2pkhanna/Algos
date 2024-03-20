@@ -1,0 +1,1 @@
+double sliPercentage = ((totalDays - violations) / (double) totalDays) * 100;
