@@ -1,0 +1,80 @@
+import React, { useState, useEffect } from 'react';
+import { DataGrid } from '@mui/x-data-grid';
+
+function YourComponent() {
+  const [data, setData] = useState([]);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [additionalData, setAdditionalData] = useState({});
+
+  useEffect(() => {
+    // Fetch data from your API
+    const fetchData = async () => {
+      try {
+        const response = await fetch('your-api-endpoint');
+        const jsonData = await response.json();
+        setData(jsonData);
+      } catch (error) {
+        console.error('Error fetching data: ', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleRowClick = (params) => {
+    setSelectedRow(params.row);
+    fetchAdditionalData(params.row);
+  };
+
+  const fetchAdditionalData = async (row) => {
+    try {
+      // Fetch additional data for xid
+      const xApiResponse = await fetch(`xapi/${row.xid}`);
+      const xData = await xApiResponse.json();
+
+      // Fetch additional data for yid
+      const yApiResponse = await fetch(`yapi/${row.yid}`);
+      const yData = await yApiResponse.json();
+
+      // Fetch additional data for zid
+      const zApiResponse = await fetch(`zapi/${row.zid}`);
+      const zData = await zApiResponse.json();
+
+      setAdditionalData({ xData, yData, zData });
+    } catch (error) {
+      console.error('Error fetching additional data: ', error);
+    }
+  };
+
+  const columns = [
+    { field: 'name', headerName: 'Name', width: 200 },
+    { field: 'xid', headerName: 'X ID', width: 150 },
+    { field: 'yid', headerName: 'Y ID', width: 150 },
+    { field: 'zid', headerName: 'Z ID', width: 150 },
+  ];
+
+  return (
+    <div>
+      <div style={{ height: 400, width: '100%' }}>
+        <DataGrid
+          rows={data}
+          columns={columns}
+          rowHeight={40}
+          pageSize={5}
+          onRowClick={handleRowClick}
+        />
+      </div>
+      {selectedRow && (
+        <div>
+          {/* Render additional data component */}
+          <h2>Additional Data</h2>
+          <p>X Data: {additionalData.xData}</p>
+          <p>Y Data: {additionalData.yData}</p>
+          <p>Z Data: {additionalData.zData}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default YourComponent;
