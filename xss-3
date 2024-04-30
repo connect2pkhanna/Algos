@@ -1,0 +1,68 @@
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Whitelist;
+import org.springframework.web.util.HtmlUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+
+public class InputValidationInterceptor extends HandlerInterceptorAdapter {
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // Sanitize request parameters and request body for all types of requests
+        sanitizeRequestParameters(request);
+        sanitizeRequestBody(request);
+        return true;
+    }
+
+    private void sanitizeRequestParameters(HttpServletRequest request) {
+        // Sanitize request parameters for all requests
+        request.getParameterMap().forEach((key, value) -> {
+            String[] sanitizedValues = new String[value.length];
+            for (int i = 0; i < value.length; i++) {
+                sanitizedValues[i] = HtmlUtils.htmlEscape(value[i]);
+            }
+            request.setAttribute(key, sanitizedValues);
+        });
+    }
+
+    private void sanitizeRequestBody(HttpServletRequest request) throws IOException {
+        // Sanitize request body for JSON requests
+        if ("application/json".equalsIgnoreCase(request.getContentType())) {
+            String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+            try {
+                JsonNode jsonNode = objectMapper.readTree(requestBody);
+                sanitizeJsonNode(jsonNode);
+                request.setAttribute("sanitizedRequestBody", jsonNode.toString());
+            } catch (IOException e) {
+                // Handle JSON parsing exception
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void sanitizeJsonNode(JsonNode jsonNode) {
+        // Recursively traverse the JSON tree and sanitize HTML content
+        jsonNode.fields().forEachRemaining(entry -> {
+            String fieldName = entry.getKey();
+            JsonNode fieldValue = entry.getValue();
+            if (fieldValue.isTextual()) {
+                // If the field value is a string, sanitize HTML content
+                String sanitizedValue = sanitizeHtml(fieldValue.asText());
+                ((ObjectNode) jsonNode).put(fieldName, sanitizedValue);
+            } else if (fieldValue.isObject()) {
+                // If the field value is an object, recursively sanitize it
+                sanitizeJsonNode(fieldValue);
+            }
+        });
+    }
+
+    private String sanitizeHtml(String html) {
+        // Use Jsoup to sanitize HTML content
+        return Jsoup.clean(html, Whitelist.basic());
+    }
+}
