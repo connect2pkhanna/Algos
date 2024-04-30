@@ -6,6 +6,27 @@
         };
 
 
+ @Bean
+    public WebMvcConfigurer webMvcConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                // Configure CORS mappings
+                registry.addMapping("/**")
+                        .allowedOrigins("*")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE")
+                        .allowedHeaders("*");
+            }
+
+            @Override
+            public void addInterceptors(InterceptorRegistry registry) {
+                // Register input validation interceptor
+                registry.addInterceptor(new InputValidationInterceptor());
+            }
+        };
+    }
+
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
