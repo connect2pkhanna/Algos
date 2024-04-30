@@ -1,0 +1,63 @@
+ @Override
+            public void addInterceptors(InterceptorRegistry registry) {
+                // Register input validation interceptor
+                registry.addInterceptor(new InputValidationInterceptor());
+            }
+        };
+
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+
+import org.owasp.encoder.Encode;
+import org.springframework.util.StreamUtils;
+
+public class InputValidationInterceptor extends HandlerInterceptorAdapter {
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // Sanitize request parameters and request body for all types of requests
+        sanitizeRequestParameters(request);
+        sanitizeRequestBody(request);
+        return true;
+    }
+
+    private void sanitizeRequestParameters(HttpServletRequest request) {
+        // Sanitize request parameters for all requests
+        // Example: Use OWASP Java Encoder to sanitize HTML content
+        request.getParameterMap().forEach((key, value) -> {
+            String[] sanitizedValues = new String[value.length];
+            for (int i = 0; i < value.length; i++) {
+                sanitizedValues[i] = Encode.forHtml(value[i]);
+            }
+            request.setAttribute(key, sanitizedValues);
+        });
+    }
+
+    private void sanitizeRequestBody(HttpServletRequest request) {
+        // Sanitize request body for all requests (if applicable)
+        try {
+            // Read the request body
+            BufferedReader reader = request.getReader();
+            StringBuilder requestBody = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                requestBody.append(line);
+            }
+            reader.close();
+            
+            // Sanitize the request body using OWASP Java Encoder
+            String sanitizedBody = Encode.forHtml(requestBody.toString());
+            
+            // Replace the original request body with the sanitized one
+            request.setAttribute("sanitizedRequestBody", sanitizedBody);
+        } catch (IOException e) {
+            // Handle IOException
+            e.printStackTrace();
+        }
+    }
+}
