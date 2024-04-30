@@ -1,0 +1,46 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.util.HtmlUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.stream.Collectors;
+
+public class InputValidationInterceptor extends HandlerInterceptorAdapter {
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // Sanitize request parameters and request body for all types of requests
+        sanitizeRequestParameters(request);
+        sanitizeRequestBody(request);
+        return true;
+    }
+
+    private void sanitizeRequestParameters(HttpServletRequest request) {
+        // Sanitize request parameters for all requests
+        request.getParameterMap().forEach((key, value) -> {
+            String[] sanitizedValues = new String[value.length];
+            for (int i = 0; i < value.length; i++) {
+                sanitizedValues[i] = HtmlUtils.htmlEscape(value[i]);
+            }
+            request.setAttribute(key, sanitizedValues);
+        });
+    }
+
+    private void sanitizeRequestBody(HttpServletRequest request) throws IOException {
+        // Sanitize request body for JSON requests
+        if ("application/json".equalsIgnoreCase(request.getContentType())) {
+            String requestBody = extractRequestBody(request);
+            String sanitizedRequestBody = HtmlUtils.htmlEscape(requestBody);
+            request.setAttribute("sanitizedRequestBody", sanitizedRequestBody);
+        }
+    }
+
+    private String extractRequestBody(HttpServletRequest request) throws IOException {
+        try (BufferedReader reader = request.getReader()) {
+            return reader.lines().collect(Collectors.joining(System.lineSeparator()));
+        }
+    }
+}
