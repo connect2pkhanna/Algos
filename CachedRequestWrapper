@@ -1,0 +1,25 @@
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+
+public class CachedRequestWrapper extends HttpServletRequestWrapper {
+
+    private final String requestBody;
+
+    public CachedRequestWrapper(HttpServletRequest request) throws IOException {
+        super(request);
+        // Cache the request body content
+        try (BufferedReader reader = request.getReader()) {
+            this.requestBody = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+        }
+    }
+
+    @Override
+    public BufferedReader getReader() {
+        // Provide a reader for the cached request body content
+        return new BufferedReader(new StringReader(requestBody));
+    }
+
+}
