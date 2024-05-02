@@ -1,0 +1,66 @@
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
+import java.io.*;
+import java.util.logging.Logger;
+
+public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
+
+    private final byte[] cachedBody;
+
+    public CachedBodyHttpServletRequest(HttpServletRequest request) throws IOException {
+        super(request);
+        // Cache the request body
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        try (InputStream inputStream = request.getInputStream()) {
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, bytesRead);
+            }
+        }
+        cachedBody = byteArrayOutputStream.toByteArray();
+    }
+
+    @Override
+    public ServletInputStream getInputStream() throws IOException {
+        return new CachedBodyServletInputStream(cachedBody);
+    }
+
+    @Override
+    public BufferedReader getReader() throws IOException {
+        return new BufferedReader(new InputStreamReader(this.getInputStream()));
+    }
+
+    public String getCachedBody() {
+        return new String(cachedBody);
+    }
+
+    private static class CachedBodyServletInputStream extends ServletInputStream {
+
+        private final ByteArrayInputStream byteArrayInputStream;
+
+        public CachedBodyServletInputStream(byte[] cachedBody) {
+            byteArrayInputStream = new ByteArrayInputStream(cachedBody);
+        }
+
+        @Override
+        public boolean isFinished() {
+            return byteArrayInputStream.available() == 0;
+        }
+
+        @Override
+        public boolean isReady() {
+            return true;
+        }
+
+        @Override
+        public void setReadListener(ReadListener readListener) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int read() throws IOException {
+            return byteArrayInputStream.read();
+        }
+    }
+}
