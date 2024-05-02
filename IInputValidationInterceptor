@@ -1,0 +1,70 @@
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.text.StringEscapeUtils;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.stream.Collectors;
+
+public class InputValidationInterceptor extends HandlerInterceptorAdapter {
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // Sanitize request parameters and request body for all types of requests
+        sanitizeRequestParameters(request);
+        sanitizeRequestBody(request);
+        return true;
+    }
+
+    private void sanitizeRequestParameters(HttpServletRequest request) {
+        // Sanitize request parameters for all requests
+        request.getParameterMap().forEach((key, value) -> {
+            String[] sanitizedValues = new String[value.length];
+            for (int i = 0; i < value.length; i++) {
+                sanitizedValues[i] = StringEscapeUtils.escapeHtml4(value[i]);
+            }
+            request.setAttribute(key, sanitizedValues);
+        });
+    }
+
+    private void sanitizeRequestBody(HttpServletRequest request) throws IOException {
+        // Sanitize request body for JSON requests
+        if ("application/json".equalsIgnoreCase(request.getContentType())) {
+            String requestBody = getCachedRequestBody(request);
+            try {
+                JsonNode jsonNode = objectMapper.readTree(requestBody);
+                sanitizeJsonNode(jsonNode);
+                request.setAttribute("sanitizedRequestBody", jsonNode.toString());
+            } catch (IOException e) {
+                // Handle JSON parsing exception
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String getCachedRequestBody(HttpServletRequest request) throws IOException {
+        // Get the cached request body content from the filter
+        return (String) request.getAttribute("cachedRequestBody");
+    }
+
+    private void sanitizeJsonNode(JsonNode jsonNode) {
+        // Recursively traverse the JSON tree and decode HTML entities within specific fields
+        if (jsonNode.isObject()) {
+            jsonNode.fields().forEachRemaining(entry -> {
+                String fieldName = entry.getKey();
+                JsonNode fieldValue = entry.getValue();
+                if (fieldValue.isTextual()) {
+                    String sanitizedValue = StringEscapeUtils.escapeHtml4(fieldValue.asText());
+                    ((ObjectNode) jsonNode).put(fieldName, sanitizedValue);
+                } else if (fieldValue.isObject()) {
+                    sanitizeJsonNode(fieldValue);
+                }
+            });
+        }
+    }
+}
