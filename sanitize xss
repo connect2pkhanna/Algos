@@ -1,0 +1,28 @@
+import React, { useState } from 'react';
+import DOMPurify from 'dompurify';
+import SanitizedHTML from './SanitizedHTML';
+
+const MyComponent = () => {
+  const [userContent, setUserContent] = useState('');
+
+  const sanitizeInput = (input) => {
+    return DOMPurify.sanitize(input);
+  };
+
+  const handleInputChange = (event) => {
+    const userInput = event.target.value;
+    const sanitizedInput = sanitizeInput(userInput);
+    setUserContent(sanitizedInput);
+  };
+
+  return (
+    <div>
+      <h2>Enter User Content</h2>
+      <input type="text" value={userContent} onChange={handleInputChange} />
+      <h2>Rendered User Content</h2>
+      <SanitizedHTML html={userContent} />
+    </div>
+  );
+};
+
+export default MyComponent;
