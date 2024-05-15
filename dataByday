@@ -1,0 +1,9 @@
+@Query("SELECT TO_CHAR(e.date, 'Day'), AVG(e.value) " +
+           "FROM YourEntity e " +
+           "GROUP BY TO_CHAR(e.date, 'Day')")
+    List<Object[]> findAverageValuePerDayOfWeek();
+
+    @Query("SELECT TO_CHAR(e.date, 'Day'), MAX(e.value) " +
+           "FROM YourEntity e " +
+           "GROUP BY TO_CHAR(e.date, 'Day')")
+    List<Object[]> findPeakValuePerDayOfWeek();
