@@ -7,3 +7,18 @@
            "FROM YourEntity e " +
            "GROUP BY TO_CHAR(e.date, 'Day')")
     List<Object[]> findPeakValuePerDayOfWeek();
+
+
+ @Query("SELECT TO_CHAR(e.date, 'Day'), AVG(e.value) " +
+           "FROM YourEntity e " +
+           "GROUP BY TO_CHAR(e.date, 'Day'), TO_CHAR(e.date, 'D') " +
+           "ORDER BY CASE " +
+           "WHEN TO_CHAR(e.date, 'D') = '1' THEN 7 " +  // Sunday
+           "WHEN TO_CHAR(e.date, 'D') = '2' THEN 1 " +  // Monday
+           "WHEN TO_CHAR(e.date, 'D') = '3' THEN 2 " +  // Tuesday
+           "WHEN TO_CHAR(e.date, 'D') = '4' THEN 3 " +  // Wednesday
+           "WHEN TO_CHAR(e.date, 'D') = '5' THEN 4 " +  // Thursday
+           "WHEN TO_CHAR(e.date, 'D') = '6' THEN 5 " +  // Friday
+           "WHEN TO_CHAR(e.date, 'D') = '7' THEN 6 " +  // Saturday
+           "END")
+    List<Object[]> findAverageValuePerDayOfWeek();
