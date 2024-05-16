@@ -1,0 +1,11 @@
+@Query("SELECT TO_CHAR(e.date, 'HH24MI'), AVG(e.value) " +
+           "FROM YourEntity e " +
+           "GROUP BY TO_CHAR(e.date, 'HH24MI') " +
+           "ORDER BY TO_NUMBER(TO_CHAR(e.date, 'HH24'))")
+    List<Object[]> findAverageValuePerHour();
+
+    @Query("SELECT TO_CHAR(e.date, 'HH24MI'), MAX(e.value) " +
+           "FROM YourEntity e " +
+           "GROUP BY TO_CHAR(e.date, 'HH24MI') " +
+           "ORDER BY TO_NUMBER(TO_CHAR(e.date, 'HH24'))")
+    List<Object[]> findPeakValuePerHour();
