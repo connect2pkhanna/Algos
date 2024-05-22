@@ -1,2 +1,3 @@
 @Query("SELECT r.id AS id, t.name AS testName, r.status AS status FROM Result r JOIN r.test t WHERE t.id = :testId")
     List<ResultWithTestName> findResultsByTestId(@Param("testId") Long testId);
+@Query("SELECT r.id AS id, t.name AS testName, r.status AS status FROM Result r, Test t WHERE r.testId = t.id AND t.id = :testId")
