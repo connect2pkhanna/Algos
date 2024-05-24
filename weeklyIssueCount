@@ -1,0 +1,4 @@
+ @Query("SELECT function('week', i.date) as week, SUM(i.issueCount) as totalIssues " +
+           "FROM Issue i " +
+           "GROUP BY function('week', i.date)")
+    List<WeeklyIssueCount> findWeeklyIssueCounts();
