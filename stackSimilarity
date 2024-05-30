@@ -1,0 +1,101 @@
+package com.bezkoder.spring.jpa.postgresql;
+
+import java.util.*;
+
+import java.util.*;
+
+public class StackTraceSimilarity {
+
+    // Generates sample stack traces
+    private static List<String> getSampleStackTraces() {
+        List<String> stackTraces = new ArrayList<>();
+        stackTraces.add("Akhil Dhir is his name and i like it");
+        stackTraces.add("My name is Punit khanna");
+        stackTraces.add("My name is Puneet khanna & i am good");
+        stackTraces.add("His name  was pawan khanna");
+        stackTraces.add("My name pawan ");
+        return stackTraces;
+    }
+
+    // Computes TF-IDF vectors for stack traces
+    private static Map<String, Map<String, Double>> computeTFIDFVectors(List<String> stackTraces) {
+        Map<String, Map<String, Double>> tfidfVectors = new HashMap<>();
+        Set<String> vocabulary = new HashSet<>();
+
+        // Calculate term frequencies and build vocabulary
+        List<Map<String, Integer>> termFrequencies = new ArrayList<>();
+        for (String stackTrace : stackTraces) {
+            Map<String, Integer> termFrequency = new HashMap<>();
+            String[] words = stackTrace.split("\\s+");
+            for (String word : words) {
+                termFrequency.put(word, termFrequency.getOrDefault(word, 0) + 1);
+                vocabulary.add(word);
+            }
+            termFrequencies.add(termFrequency);
+        }
+
+        // Compute IDF for each term
+        Map<String, Double> inverseDocumentFrequencies = new HashMap<>();
+        int totalDocuments = stackTraces.size();
+        for (String term : vocabulary) {
+            int df = 0;
+            for (Map<String, Integer> termFrequency : termFrequencies) {
+                if (termFrequency.containsKey(term)) {
+                    df++;
+                }
+            }
+            double idf = Math.log((double) totalDocuments / (df + 1)) + 1; // Smooth IDF
+            inverseDocumentFrequencies.put(term, idf);
+        }
+
+        // Compute TF-IDF vectors
+        for (int i = 0; i < stackTraces.size(); i++) {
+            String currentStackTrace = stackTraces.get(i);
+            Map<String, Double> tfidfVector = new HashMap<>();
+            Map<String, Integer> termFrequency = termFrequencies.get(i);
+            for (String term : termFrequency.keySet()) {
+                double tfidf = termFrequency.get(term) * inverseDocumentFrequencies.get(term);
+                tfidfVector.put(term, tfidf);
+            }
+            tfidfVectors.put(currentStackTrace, tfidfVector);
+        }
+
+        return tfidfVectors;
+    }
+
+    // Computes cosine similarity between two TF-IDF vectors
+    private static double computeCosineSimilarity(Map<String, Double> vectorA, Map<String, Double> vectorB) {
+        double dotProduct = 0;
+        double magnitudeA = 0;
+        double magnitudeB = 0;
+
+        // Compute dot product and magnitudes
+        for (String term : vectorA.keySet()) {
+            double valueA = vectorA.getOrDefault(term, 0.0);
+            double valueB = vectorB.getOrDefault(term, 0.0);
+            dotProduct += valueA * valueB;
+            magnitudeA += valueA * valueA;
+            magnitudeB += valueB * valueB;
+        }
+        magnitudeA = Math.sqrt(magnitudeA);
+        magnitudeB = Math.sqrt(magnitudeB);
+
+        // Compute cosine similarity
+        if (magnitudeA == 0 || magnitudeB == 0) {
+            return 0.0;
+        }
+        return dotProduct / (magnitudeA * magnitudeB);
+    }
+
+    public static void main(String[] args) {
+        List<String> stackTraces = getSampleStackTraces();
+        Map<String, Map<String, Double>> tfidfVectors = computeTFIDFVectors(stackTraces);
+
+        for (int i = 0; i < stackTraces.size(); i++) {
+            for (int j = i + 1; j < stackTraces.size(); j++) {
+                double similarity = computeCosineSimilarity(tfidfVectors.get(stackTraces.get(i)), tfidfVectors.get(stackTraces.get(j)));
+                System.out.println("Cosine similarity between \"" + stackTraces.get(i) + "\" and \"" + stackTraces.get(j) + "\": " + similarity);
+            }
+        }
+    }
+}
