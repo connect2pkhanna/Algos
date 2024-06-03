@@ -1,0 +1,1 @@
+String cleanedString = inputString.replaceAll("[^a-zA-Z0-9]", "");
