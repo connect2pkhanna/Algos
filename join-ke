@@ -1,0 +1,6 @@
+@Query("SELECT ke.error, s.solutionDescription " +
+       "FROM KnownError ke, Solution s, SolutionAndKnownErrorMapping m " +
+       "WHERE ke.id = m.knownErrorId " +
+       "AND s.id = m.solutionId " +
+       "AND ke.id = :knownErrorId")
+List<Object[]> findSolutionDescriptionAndKnownErrorDetailByKnownErrorId(Long knownErrorId);
