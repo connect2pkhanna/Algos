@@ -1,0 +1,136 @@
+import React, { useState, useEffect } from 'react';
+import { DataGrid } from '@mui/x-data-grid';
+import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+
+const EditableTable = () => {
+  const [data, setData] = useState([]);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = () => {
+    fetch('/api/data')
+      .then(response => response.json())
+      .then(data => setData(data))
+      .catch(error => console.error('Error fetching data:', error));
+  };
+
+  const handleRowClick = (params) => {
+    const row = params.row;
+    setSelectedRow(row.id);
+    setFormData(row);
+    setOpen(true);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'jiraid') {
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        [name]: value
+      }));
+    } else {
+      setFormData(prevFormData => ({
+        ...prevFormData,
+        [name]: prevFormData[name] === value ? null : value
+      }));
+    }
+  };
+
+  const handleClose = () => {
+    setFormData({}); // Reset formData to its initial state
+    setOpen(false);
+  };
+
+  const handleSave = () => {
+    fetch(`/api/data/${selectedRow}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(() => {
+      fetchData();
+      setSelectedRow(null);
+      setOpen(false);
+    })
+    .catch(error => console.error('Error updating data:', error));
+  };
+
+  const columns = [
+    { field: 'id', headerName: 'ID', width: 90 },
+    { field: 'stacktrace', headerName: 'Stacktrace', width: 150 },
+    { field: 'jiraid', headerName: 'JIRA ID', width: 150 },
+    { field: 'issuetype', headerName: 'Issue Type', width: 150 },
+    { field: 'comments', headerName: 'Comments', width: 200 },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      width: 150,
+      renderCell: (params) => (
+        <Button variant="contained" color="primary" onClick={() => handleRowClick(params)}>Edit</Button>
+      )
+    }
+  ];
+
+  return (
+    <div>
+      <h1>Editable Table</h1>
+      <div style={{ height: 400, width: '100%' }}>
+        <DataGrid
+          rows={data}
+          columns={columns}
+          pageSize={5}
+          rowsPerPageOptions={[5]}
+          onRowClick={handleRowClick}
+        />
+      </div>
+
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Edit Row</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            name="jiraid"
+            label="JIRA ID"
+            type="text"
+            fullWidth
+            value={formData.jiraid || ''}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            name="issuetype"
+            label="Issue Type"
+            type="text"
+            fullWidth
+            value={formData.issuetype || ''}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            name="comments"
+            label="Comments"
+            type="text"
+            fullWidth
+            value={formData.comments || ''}
+            onChange={handleInputChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">Cancel</Button>
+          <Button onClick={handleSave} color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
+};
+
+export default EditableTable;
