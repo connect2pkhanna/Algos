@@ -1,0 +1,7 @@
+ renderCell: (params) => (
+        <Tooltip title={params.value}>
+          <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+            {params.value}
+          </div>
+        </Tooltip>
+      )
