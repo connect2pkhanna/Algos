@@ -13,3 +13,16 @@ renderCell: (params) => (
         {params.value}
       </div>
     )
+=====================
+
+
+<Tooltip
+  title={params.value}
+  sx={{
+    fontSize: '14px' // Change the font size as needed
+  }}
+>
+  <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+    {params.value}
+  </div>
+</Tooltip>
