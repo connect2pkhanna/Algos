@@ -7,3 +7,9 @@
 div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
     {params.value}
   </div>
+
+renderCell: (params) => (
+      <div style={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordWrap: 'break-word' }}>
+        {params.value}
+      </div>
+    )
