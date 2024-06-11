@@ -1,12 +1,6 @@
-<Tooltip
-  title={params.value}
-  sx={{
-    fontFamily: 'Arial, sans-serif',
-    fontSize: '14px',
-    fontWeight: 'bold'
-  }}
->
-  <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+
+<Tooltip title={params.value}>
+  <Typography variant="body1" style={{ fontSize: '14px' }}>
     {params.value}
-  </div>
+  </Typography>
 </Tooltip>
