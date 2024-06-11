@@ -4,3 +4,6 @@
     {params.value}
   </Typography>
 </Tooltip>
+div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+    {params.value}
+  </div>
