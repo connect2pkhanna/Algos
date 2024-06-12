@@ -1,1 +1,13 @@
   @Query("SELECT p FROM Pattern p WHERE :inputString LIKE CONCAT('%', TRIM(BOTH '[err] ' FROM p.pattern), '%')")
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+
+public interface PatternRepository extends JpaRepository<Pattern, Long> {
+    @Query(value = "SELECT * FROM Pattern p WHERE :inputString LIKE '%' || CASE WHEN p.pattern LIKE '[err] %' THEN SUBSTR(p.pattern, 7) ELSE p.pattern END || '%'", nativeQuery = true)
+    List<Pattern> findPatternsInString(@Param("inputString") String inputString);
+}
+
