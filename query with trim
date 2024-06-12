@@ -1,0 +1,1 @@
+  @Query("SELECT p FROM Pattern p WHERE :inputString LIKE CONCAT('%', TRIM(BOTH '[err] ' FROM p.pattern), '%')")
