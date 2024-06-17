@@ -18,3 +18,8 @@
 
         // Format the date and time
         String formattedDate = formatter.format(now);
+
+
+your_search_here
+| rex field=message "API\s+\"(?<api_name>[^\"]+)\""
+| stats values(api_name) as unique_apis
