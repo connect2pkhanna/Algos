@@ -11,3 +11,10 @@
             // Parse the formatted date string back to Date
             Date parsedDate = formatter.parse(formattedDate);
             System.out.println("Parsed Date: " + parsedDate);
+============
+
+
+  SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy 'hour.'HH'.00.00.0000000' a");
+
+        // Format the date and time
+        String formattedDate = formatter.format(now);
