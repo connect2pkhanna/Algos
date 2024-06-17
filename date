@@ -1,0 +1,13 @@
+ Date now = new Date();
+
+        // Define the desired format
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy 'hour.'HH'.00.00.0000000' a");
+
+        // Format the current date and time
+        String formattedDate = formatter.format(now);
+        System.out.println("Formatted Date: " + formattedDate);
+
+        try {
+            // Parse the formatted date string back to Date
+            Date parsedDate = formatter.parse(formattedDate);
+            System.out.println("Parsed Date: " + parsedDate);
