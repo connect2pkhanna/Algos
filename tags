@@ -1,0 +1,16 @@
+ private static void findElementsWithNameXFormBind(Element element) {
+        // Check if current element has name attribute equal to 'xform:bind'
+        String nameAttributeValue = element.getAttribute("name");
+        if ("xform:bind".equals(nameAttributeValue)) {
+            // Process the element with name="xform:bind"
+            System.out.println("Element with name='xform:bind': " + element.getNodeName());
+        }
+
+        // Recursively process children elements
+        NodeList children = element.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                findElementsWithNameXFormBind((Element) node);
+            }
+        }
