@@ -64,3 +64,4 @@ public class ConditionParser {
 }
 
 String bindRegex = "xform:bind\\('([^']+)'\\)\\s*=\\s*'([^']+)'";
+String bindRegex = "xform:bind\\('([^']+)'\\)\\s*([!=<>]+)\\s*'([^']+)'";
