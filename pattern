@@ -1,0 +1,30 @@
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class ConditionParser {
+    public static void main(String[] args) {
+        String requiredAttribute = "(xform:bind('bind1') = 'true' and xform:bind('bind2') != 'false') or (xform:bind('bind3') = 'yes' and xform:bind('bind4') = 'no') or (xform:bind('bind5') = 'maybe' and xform:bind('bind6') = 'perhaps' or xform:bind('bind7') = 'possibly')";
+
+        // Regex to match conditions within parentheses
+        String regex = "\\(([^()]+)\\)"; // Matches expressions within parentheses
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(requiredAttribute);
+
+        // Extract and print conditions
+        while (matcher.find()) {
+            String condition = matcher.group(1).trim();
+
+            // Split the condition by 'and' and 'or'
+            String[] andConditions = condition.split("\\s+and\\s+");
+            for (String andCondition : andConditions) {
+                String[] orConditions = andCondition.split("\\s+or\\s+");
+                for (String orCondition : orConditions) {
+                    String formattedCondition = orCondition.trim()
+                        .replace("xform:bind(", "bind(")
+                        .replace(" ", "");
+                    System.out.println("data=" + formattedCondition);
+                }
+            }
+        }
+    }
+}
