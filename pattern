@@ -67,3 +67,4 @@ String bindRegex = "xform:bind\\('([^']+)'\\)\\s*=\\s*'([^']+)'";
 String bindRegex = "xform:bind\\('([^']+)'\\)\\s*([!=<>]+)\\s*'([^']+)'";
 String pattern = "xxforms:bind\\('([^']+)'\\)(=)'([^']+)'";
 String pattern = "xxforms:bind\\('([^']+)'\\)(=|!=|>|<)'([^']+)'";
+String pattern = "(?!xxforms:bind\\('([^']+)'\\)(=|!=|>|<)'([^']+)'$).*$";
