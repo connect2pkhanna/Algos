@@ -28,3 +28,37 @@ public class ConditionParser {
         }
     }
 }
+==========================
+
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class ConditionParser {
+    public static void main(String[] args) {
+        String requiredAttribute = "(xform:bind('bind1') = 'true' and xform:bind('bind2') != 'false') or (xform:bind('bind3') = 'yes' and xform:bind('bind4') = 'no') or (xform:bind('bind5') = 'maybe' and xform:bind('bind6') = 'perhaps' or xform:bind('bind7') = 'possibly')";
+
+        // Split by 'or' to get individual condition groups
+        String[] orGroups = requiredAttribute.split("\\s+or\\s+");
+
+        // Regex to capture bind conditions
+        String bindRegex = "xform:bind\\('([^']+)\\')\\s*=\\s*'([^']+)'";
+
+        // Pattern for bind conditions
+        Pattern bindPattern = Pattern.compile(bindRegex);
+
+        // Process each 'or' group
+        for (String orGroup : orGroups) {
+            // Split by 'and' within each 'or' group
+            String[] andConditions = orGroup.split("\\s+and\\s+");
+            for (String andCondition : andConditions) {
+                Matcher matcher = bindPattern.matcher(andCondition);
+                if (matcher.find()) {
+                    String bindName = matcher.group(1);
+                    String bindValue = matcher.group(2);
+                    System.out.println(bindName + "=" + bindValue);
+                }
+            }
+        }
+    }
+}
