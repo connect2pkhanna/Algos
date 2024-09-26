@@ -1,7 +1,33 @@
- renderCell: (params) => (
-        <Tooltip title={params.value}>
-          <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-            {params.value}
-          </div>
-        </Tooltip>
-      )
+
+How copilot can help 
+
+Automates API request/response code generation.
+Suggests UI automation snippets (Selenium, Playwright).
+Generates locators for UI elements (XPath, CSS selectors).
+Provides code reviews and improvement suggestions for automation scripts.
+Generates API tests in any language when provided with service code.
+Assists with repetitive tasks (e.g., form validation, login flows).
+
+⏳ Time Savings:
+
+80% of boilerplate code for API automation.
+50% reduction in manual effort for UI element selectors.
+25-30% time saved with code suggestions, reviews, and test generation.
+
+API request/response coding	3 hours	1 hour	66% saved
+Writing UI selectors	2 hours	1 hour	50% saved
+Writing API test cases	4 hours	1.5 hours	62% saved
+Reviewing and improving code	2 hours	1 hour	50% saved
+Writing a new test class	5 hours	2 hours	60% saved
+
+
+What Copilot Cannot Do:
+
+ Cannot write/maintain the entire automation framework.
+ Doesn’t handle complex test logic or maintain test code.
+ Human input required for high-level test strategy and framework design.
+
+Conclusion:
+Copilot boosts productivity by automating repetitive tasks, writing API tests, and offering code suggestions, but human expertise remains crucial for framework maintenance and complex test logic.
+
+
